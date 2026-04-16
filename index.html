@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SelectoTech | Portal de Comisiones</title>
+  <meta name="description" content="Portal interactivo para el equipo de ventas de SelectoTech. Calcula tu comisión y aprende a responder a tus clientes." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;800&family=Russo+One&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Lluvia de billetes -->
+  <canvas id="moneyCanvas" aria-hidden="true"></canvas>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="brand">
+      <div class="brand-shield" aria-hidden="true">
+        <svg viewBox="0 0 64 80" width="44" height="54">
+          <defs>
+            <linearGradient id="shieldGrad" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0%" stop-color="#1e6dff" />
+              <stop offset="100%" stop-color="#0a2a8a" />
+            </linearGradient>
+          </defs>
+          <path d="M32 2 L60 12 V36 C60 56 46 70 32 76 C18 70 4 56 4 36 V12 Z" fill="url(#shieldGrad)" />
+          <path d="M44 22 H26 a6 6 0 0 0 0 12 h12 a6 6 0 0 1 0 12 H20" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="square" />
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>SelectoTech</h1>
+        <span>TECNOLOGÍA DE CONFIANZA</span>
+      </div>
+    </div>
+    <nav>
+      <a href="#calculadora">Calculadora</a>
+      <a href="#metas">Metas</a>
+      <a href="#asistente">Asistente</a>
+      <a href="#guion">Guiones</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">PORTAL DE COMISIONES · EQUIPO DE VENTAS</p>
+      <h2 class="hero-title">VENDE MÁS.<br /><span class="gradient-text">GANA MÁS.</span></h2>
+      <p class="hero-sub">Calcula tu comisión del <strong>20%</strong> en tiempo real, fija tus metas semanales y mensuales, y aprende a responder a cada cliente con guiones que cierran ventas.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#calculadora">Calcular mi comisión</a>
+        <a class="btn btn-ghost" href="#asistente">Asistente de respuestas</a>
+      </div>
+      <div class="hero-stats">
+        <div><span class="stat-num" data-count="20">0</span><span class="stat-suffix">%</span><p>Comisión por venta</p></div>
+        <div><span class="stat-num" data-count="100">0</span><span class="stat-suffix">%</span><p>Pagos puntuales</p></div>
+        <div><span class="stat-num" data-count="24">0</span><span class="stat-suffix">/7</span><p>Soporte al equipo</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Calculadora -->
+  <section id="calculadora" class="section">
+    <div class="section-head">
+      <h3>Calculadora de comisiones</h3>
+      <p>Mueve el slider o escribe el monto que vendes. Tu <strong>20%</strong> se calcula al instante.</p>
+    </div>
+
+    <div class="calc-grid">
+      <div class="calc-card">
+        <div class="calc-tabs" role="tablist">
+          <button class="calc-tab active" data-period="dia" role="tab">Día</button>
+          <button class="calc-tab" data-period="semana" role="tab">Semana</button>
+          <button class="calc-tab" data-period="mes" role="tab">Mes</button>
+        </div>
+
+        <label class="calc-label" for="ventaInput">Monto de ventas (MXN)</label>
+        <div class="calc-input-row">
+          <span class="currency">$</span>
+          <input id="ventaInput" type="number" min="0" step="100" value="5000" />
+        </div>
+
+        <input id="ventaSlider" type="range" min="0" max="200000" step="500" value="5000" />
+        <div class="slider-marks">
+          <span>$0</span><span>$50k</span><span>$100k</span><span>$150k</span><span>$200k</span>
+        </div>
+
+        <label class="calc-label" for="rateInput">Porcentaje de comisión</label>
+        <div class="rate-row">
+          <input id="rateInput" type="number" min="1" max="100" step="1" value="20" />
+          <span>%</span>
+          <small>(Por defecto 20%)</small>
+        </div>
+      </div>
+
+      <div class="result-card">
+        <p class="result-label">TU COMISIÓN</p>
+        <div class="result-amount" id="resultAmount">$1,000.00</div>
+        <p class="result-period" id="resultPeriodLabel">por día trabajado</p>
+
+        <div class="projection">
+          <div>
+            <p>Proyección semanal</p>
+            <strong id="projWeek">$7,000.00</strong>
+          </div>
+          <div>
+            <p>Proyección mensual</p>
+            <strong id="projMonth">$30,000.00</strong>
+          </div>
+          <div>
+            <p>Proyección anual</p>
+            <strong id="projYear">$365,000.00</strong>
+          </div>
+        </div>
+
+        <button id="celebrateBtn" class="btn btn-primary btn-lg">¡Hacer llover billetes!</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Metas -->
+  <section id="metas" class="section section-alt">
+    <div class="section-head">
+      <h3>Metas que desbloquean bonos</h3>
+      <p>Escribe cuánto llevas vendido este mes y mira cuánto te falta para el siguiente nivel.</p>
+    </div>
+
+    <div class="goals-wrapper">
+      <div class="goals-input">
+        <label for="ventaMes">Ventas acumuladas del mes</label>
+        <div class="calc-input-row">
+          <span class="currency">$</span>
+          <input id="ventaMes" type="number" min="0" step="500" value="15000" />
+        </div>
+        <input id="ventaMesSlider" type="range" min="0" max="300000" step="1000" value="15000" />
+      </div>
+
+      <div class="goals-list" id="goalsList">
+        <!-- Niveles inyectados por JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Asistente -->
+  <section id="asistente" class="section">
+    <div class="section-head">
+      <h3>Asistente de respuestas a clientes</h3>
+      <p>Pega lo que escribió tu cliente. El asistente te sugiere una respuesta clara, amable y orientada a cerrar la venta.</p>
+    </div>
+
+    <div class="assistant">
+      <div class="assistant-input">
+        <label for="clienteMsg">Mensaje del cliente</label>
+        <textarea id="clienteMsg" rows="6" placeholder="Ejemplo: Hola, ¿cuánto cuesta la laptop? ¿Tienen envío? ¿Aceptan pago a meses?"></textarea>
+        <div class="assistant-actions">
+          <button id="responderBtn" class="btn btn-primary">Generar respuesta</button>
+          <button id="copiarBtn" class="btn btn-ghost" disabled>Copiar respuesta</button>
+        </div>
+        <div class="quick-tags">
+          <span>Pruebas rápidas:</span>
+          <button class="chip" data-sample="Hola, ¿cuánto cuesta la laptop?">Precio</button>
+          <button class="chip" data-sample="¿Tienen envío a Monterrey?">Envío</button>
+          <button class="chip" data-sample="¿Manejan garantía?">Garantía</button>
+          <button class="chip" data-sample="Lo veo muy caro, ¿me dan descuento?">Descuento</button>
+          <button class="chip" data-sample="¿Aceptan meses sin intereses?">Pagos</button>
+          <button class="chip" data-sample="Tengo una queja, mi pedido no llegó.">Queja</button>
+        </div>
+      </div>
+
+      <div class="assistant-output">
+        <p class="output-label">RESPUESTA SUGERIDA</p>
+        <div id="respuestaBox" class="respuesta-box">
+          La respuesta aparecerá aquí. Pulsa <strong>Generar respuesta</strong> después de pegar el mensaje del cliente.
+        </div>
+        <p class="output-tip">Consejo: personaliza el nombre del cliente y agrega un cierre con pregunta para mantener la conversación.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Guiones -->
+  <section id="guion" class="section section-alt">
+    <div class="section-head">
+      <h3>Guiones rápidos para cerrar más ventas</h3>
+      <p>Frases listas para usar en WhatsApp, llamadas o tienda física.</p>
+    </div>
+
+    <div class="scripts-grid">
+      <article class="script-card">
+        <h4>Saludo inicial</h4>
+        <p>"¡Hola! Soy <em>[tu nombre]</em> de SelectoTech, <strong>tecnología de confianza</strong>. ¿En qué equipo o servicio te puedo ayudar hoy?"</p>
+      </article>
+      <article class="script-card">
+        <h4>Cuando preguntan el precio</h4>
+        <p>"El precio es <em>$X</em>, e incluye <em>[garantía / soporte / accesorios]</em>. ¿Te lo aparto y te paso el link de pago?"</p>
+      </article>
+      <article class="script-card">
+        <h4>Objeción: "está caro"</h4>
+        <p>"Entiendo. Considera que incluye <em>[beneficio]</em> y <em>[garantía]</em>. Si lo deseas, lo podemos manejar a meses para que se ajuste a tu presupuesto."</p>
+      </article>
+      <article class="script-card">
+        <h4>Cierre</h4>
+        <p>"Perfecto. Te envío la liga de pago ahora. En cuanto confirmes, lo preparo y te comparto la guía de envío. ¿Procedemos?"</p>
+      </article>
+      <article class="script-card">
+        <h4>Seguimiento (24h)</h4>
+        <p>"¡Hola <em>[nombre]</em>! Te escribo para saber si te quedó alguna duda sobre <em>[producto]</em>. Hoy tengo disponibilidad inmediata para apartártelo."</p>
+      </article>
+      <article class="script-card">
+        <h4>Cliente molesto</h4>
+        <p>"Lamento mucho la situación. Cuéntame qué pasó y te ayudo a resolverlo de inmediato. Tu satisfacción es lo más importante para nosotros."</p>
+      </article>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> SelectoTech · Tecnología de Confianza · Portal interno del equipo de ventas</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
