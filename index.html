@@ -446,6 +446,27 @@
         </p>
       </section>
 
+      <!-- Sticky bottom CTA - always visible while scrolling -->
+      <div class="sticky-cta hidden" id="sticky-cta" aria-hidden="true">
+        <div class="sticky-cta-inner">
+          <div class="sticky-cta-info">
+            <span class="sticky-cta-label">El ebook</span>
+            <span class="sticky-cta-price">
+              <span class="strike-small">$499</span>
+              <strong>$150 <em>MXN</em></strong>
+            </span>
+          </div>
+          <a
+            href="https://pago.clip.mx/c415def5-1a5f-478e-af9f-f1979a54b82a"
+            class="sticky-cta-btn"
+            target="_blank"
+            rel="noopener"
+          >
+            Lo quiero →
+          </a>
+        </div>
+      </div>
+
       <footer class="foot">
         <p>© <span id="year"></span> Estrategias Que Venden</p>
         <p class="legal">
@@ -457,6 +478,40 @@
 
     <script>
       document.getElementById("year").textContent = new Date().getFullYear();
+
+      // ---- Sticky CTA visibility ----
+      (function () {
+        var sticky = document.getElementById("sticky-cta");
+        if (!sticky) return;
+
+        var hero = document.querySelector(".hero");
+        var finalCard = document.querySelector(".final-cta .price-card");
+        var upsellCard = document.querySelector(".upsell-card");
+
+        function rectVisible(el) {
+          if (!el) return false;
+          var r = el.getBoundingClientRect();
+          return r.top < window.innerHeight - 80 && r.bottom > 80;
+        }
+
+        function update() {
+          var heroBottom = hero ? hero.offsetTop + hero.offsetHeight : 0;
+          var passedHero = window.scrollY > heroBottom - 120;
+          var overCta = rectVisible(finalCard) || rectVisible(upsellCard);
+
+          if (passedHero && !overCta) {
+            sticky.classList.remove("hidden");
+            sticky.setAttribute("aria-hidden", "false");
+          } else {
+            sticky.classList.add("hidden");
+            sticky.setAttribute("aria-hidden", "true");
+          }
+        }
+
+        update();
+        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("resize", update);
+      })();
     </script>
   </body>
 </html>

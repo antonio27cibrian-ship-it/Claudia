@@ -835,11 +835,113 @@ section.dark .dim {
   flex-shrink: 0;
 }
 
+/* ----------------------- Sticky bottom CTA ----------------------- */
+.sticky-cta {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--light);
+  padding: 12px 16px;
+  border-top: 2px solid var(--accent);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  transform: translateY(0);
+  transition: transform 0.28s ease, opacity 0.2s ease;
+  opacity: 1;
+}
+
+.sticky-cta.hidden {
+  transform: translateY(110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sticky-cta-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sticky-cta-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.05;
+  min-width: 0;
+}
+
+.sticky-cta-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--light-dim);
+  margin-bottom: 4px;
+}
+
+.sticky-cta-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--f-display);
+  font-size: 26px;
+  letter-spacing: -0.3px;
+}
+
+.sticky-cta-price strong {
+  font-weight: 400;
+}
+
+.sticky-cta-price em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--light-dim);
+  letter-spacing: 1px;
+  margin-left: 2px;
+}
+
+.sticky-cta-price .strike-small {
+  font-size: 13px;
+  color: var(--light-dim);
+  text-decoration: line-through;
+  font-family: var(--f-sans);
+  font-weight: 700;
+}
+
+.sticky-cta-btn {
+  background: var(--accent);
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 800;
+  padding: 14px 20px;
+  border-radius: 999px;
+  font-size: 15px;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+  box-shadow: 0 4px 0 var(--accent-2);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  flex-shrink: 0;
+}
+
+.sticky-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 var(--accent-2);
+}
+
+.sticky-cta-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--accent-2);
+}
+
 /* ----------------------- Footer ----------------------- */
 .foot {
   background: var(--bg-dark-2);
   color: var(--light-dim);
-  padding: 28px var(--side);
+  /* extra bottom padding so the sticky CTA never covers footer content */
+  padding: 28px var(--side) 110px;
   font-size: 13px;
   text-align: center;
 }
