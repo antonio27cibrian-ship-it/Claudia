@@ -447,7 +447,7 @@
       </section>
 
       <!-- Sticky bottom CTA - always visible while scrolling -->
-      <div class="sticky-cta hidden" id="sticky-cta" aria-hidden="true">
+      <div class="sticky-cta" id="sticky-cta" aria-hidden="false">
         <div class="sticky-cta-inner">
           <div class="sticky-cta-info">
             <span class="sticky-cta-label">El ebook</span>
@@ -480,11 +480,12 @@
       document.getElementById("year").textContent = new Date().getFullYear();
 
       // ---- Sticky CTA visibility ----
+      // Always visible while scrolling. Only hides when a price card
+      // is on screen, so the CTAs never duplicate.
       (function () {
         var sticky = document.getElementById("sticky-cta");
         if (!sticky) return;
 
-        var hero = document.querySelector(".hero");
         var finalCard = document.querySelector(".final-cta .price-card");
         var upsellCard = document.querySelector(".upsell-card");
 
@@ -495,16 +496,13 @@
         }
 
         function update() {
-          var heroBottom = hero ? hero.offsetTop + hero.offsetHeight : 0;
-          var passedHero = window.scrollY > heroBottom - 120;
           var overCta = rectVisible(finalCard) || rectVisible(upsellCard);
-
-          if (passedHero && !overCta) {
-            sticky.classList.remove("hidden");
-            sticky.setAttribute("aria-hidden", "false");
-          } else {
+          if (overCta) {
             sticky.classList.add("hidden");
             sticky.setAttribute("aria-hidden", "true");
+          } else {
+            sticky.classList.remove("hidden");
+            sticky.setAttribute("aria-hidden", "false");
           }
         }
 
