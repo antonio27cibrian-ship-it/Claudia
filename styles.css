@@ -626,6 +626,44 @@ section.dark .dim {
   box-shadow: 0 2px 0 var(--accent-2);
 }
 
+/* Clip payment button (uses Clip's own SVG button design) */
+.clip-btn {
+  display: inline-block;
+  width: 100%;
+  max-width: 360px;
+  text-decoration: none;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 10px 24px rgba(252, 76, 2, 0.35);
+}
+
+.clip-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(252, 76, 2, 0.45);
+}
+
+.clip-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 6px 14px rgba(252, 76, 2, 0.3);
+}
+
+.clip-btn img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Currency indicator in price block */
+.price .currency {
+  font-family: var(--f-sans);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--ink-dim);
+  align-self: center;
+}
+
 .micro {
   margin: 14px 0 0;
   font-size: 13px;
