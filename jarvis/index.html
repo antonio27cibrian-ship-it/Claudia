@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>JARVIS · Asistente Personal</title>
+    <meta name="description" content="Tu asistente Jarvis personalizado con voz de mujer en español." />
+    <meta name="theme-color" content="#00cfff" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #02060d;
+        --bg-2: #050b18;
+        --cyan: #00cfff;
+        --cyan-soft: rgba(0, 207, 255, 0.5);
+        --cyan-glow: rgba(0, 207, 255, 0.15);
+        --gold: #ffb74d;
+        --red: #ff3b30;
+        --green: #00ff9c;
+        --txt: #cbeaff;
+        --txt-dim: rgba(203, 234, 255, 0.6);
+        --f-display: "Orbitron", "Inter", sans-serif;
+        --f-mono: "Share Tech Mono", "Courier New", monospace;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--txt);
+        font-family: var(--f-mono);
+        overflow: hidden;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* ====== Scan lines overlay ====== */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: repeating-linear-gradient(
+          0deg,
+          rgba(0, 207, 255, 0.03) 0px,
+          rgba(0, 207, 255, 0.03) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+        pointer-events: none;
+        z-index: 999;
+      }
+
+      /* ====== Radial vignette ====== */
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(
+          ellipse at center,
+          transparent 30%,
+          rgba(0, 0, 0, 0.7) 100%
+        );
+        pointer-events: none;
+        z-index: 998;
+      }
+
+      .app {
+        position: relative;
+        height: 100dvh;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        padding: 16px;
+        gap: 12px;
+      }
+
+      /* ============ TOP BAR ============ */
+      .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-family: var(--f-display);
+        font-size: 12px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--cyan);
+        text-shadow: 0 0 8px var(--cyan-soft);
+      }
+
+      .top-bar .logo {
+        font-weight: 900;
+        font-size: 18px;
+        letter-spacing: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .top-bar .logo::before {
+        content: "◆";
+        animation: pulse 1.6s ease-in-out infinite;
+      }
+
+      .top-bar .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 10px var(--green);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+
+      .status-dot.listening { background: var(--cyan); box-shadow: 0 0 12px var(--cyan); animation-duration: 0.7s; }
+      .status-dot.thinking  { background: var(--gold); box-shadow: 0 0 12px var(--gold); animation-duration: 0.5s; }
+      .status-dot.speaking  { background: var(--red); box-shadow: 0 0 12px var(--red); animation-duration: 0.6s; }
+
+      /* ============ MAIN STAGE ============ */
+      .stage {
+        position: relative;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      /* HUD corner brackets */
+      .corner {
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        border: 2px solid var(--cyan);
+        box-shadow: 0 0 12px var(--cyan-soft);
+      }
+      .corner.tl { top: 8px;    left: 8px;    border-right: none; border-bottom: none; }
+      .corner.tr { top: 8px;    right: 8px;   border-left: none;  border-bottom: none; }
+      .corner.bl { bottom: 8px; left: 8px;    border-right: none; border-top: none; }
+      .corner.br { bottom: 8px; right: 8px;   border-left: none;  border-top: none; }
+
+      /* Side HUD readouts */
+      .hud-side {
+        position: absolute;
+        font-family: var(--f-mono);
+        font-size: 10px;
+        color: var(--cyan);
+        opacity: 0.6;
+        line-height: 1.8;
+        max-width: 36%;
+      }
+      .hud-side.left  { left: 18px;  top: 60px; text-align: left; }
+      .hud-side.right { right: 18px; top: 60px; text-align: right; }
+
+      .hud-side .row { display: flex; justify-content: space-between; gap: 8px; }
+      .hud-side.right .row { flex-direction: row-reverse; }
+      .hud-side b { color: var(--txt); font-weight: 400; }
+
+      /* ============ ARC REACTOR ============ */
+      .reactor {
+        position: relative;
+        width: min(70vw, 320px);
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+      }
+
+      .ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid var(--cyan);
+        box-shadow:
+          0 0 20px var(--cyan-glow),
+          inset 0 0 20px var(--cyan-glow);
+      }
+
+      .ring.r1 { inset: 0;                  border-width: 1px; opacity: 0.4; animation: spin 24s linear infinite; }
+      .ring.r2 { inset: 8%;                 border-width: 1px; opacity: 0.5; animation: spin 18s linear reverse infinite; border-style: dashed; }
+      .ring.r3 { inset: 18%;                border-width: 2px; opacity: 0.7; animation: spin 12s linear infinite; }
+      .ring.r4 { inset: 28%;                border-width: 1px; opacity: 0.6; animation: spin 8s  linear reverse infinite; border-style: dotted; }
+
+      /* Tick marks on the outer ring */
+      .ticks {
+        position: absolute;
+        inset: -2%;
+        border-radius: 50%;
+        background:
+          conic-gradient(
+            from 0deg,
+            transparent 0 4deg, var(--cyan) 4deg 5deg,
+            transparent 5deg 14deg, var(--cyan) 14deg 15deg,
+            transparent 15deg 24deg, var(--cyan) 24deg 25deg,
+            transparent 25deg 34deg, var(--cyan) 34deg 35deg,
+            transparent 35deg 44deg, var(--cyan) 44deg 45deg,
+            transparent 45deg 54deg, var(--cyan) 54deg 55deg,
+            transparent 55deg 64deg, var(--cyan) 64deg 65deg,
+            transparent 65deg 74deg, var(--cyan) 74deg 75deg,
+            transparent 75deg 84deg, var(--cyan) 84deg 85deg,
+            transparent 85deg 94deg, var(--cyan) 94deg 95deg,
+            transparent 95deg 104deg, var(--cyan) 104deg 105deg,
+            transparent 105deg 114deg, var(--cyan) 114deg 115deg,
+            transparent 115deg 124deg, var(--cyan) 124deg 125deg,
+            transparent 125deg 134deg, var(--cyan) 134deg 135deg,
+            transparent 135deg 144deg, var(--cyan) 144deg 145deg,
+            transparent 145deg 154deg, var(--cyan) 154deg 155deg,
+            transparent 155deg 164deg, var(--cyan) 164deg 165deg,
+            transparent 165deg 174deg, var(--cyan) 174deg 175deg,
+            transparent 175deg 184deg, var(--cyan) 184deg 185deg,
+            transparent 185deg 194deg, var(--cyan) 194deg 195deg,
+            transparent 195deg 204deg, var(--cyan) 204deg 205deg,
+            transparent 205deg 214deg, var(--cyan) 214deg 215deg,
+            transparent 215deg 224deg, var(--cyan) 224deg 225deg,
+            transparent 225deg 234deg, var(--cyan) 234deg 235deg,
+            transparent 235deg 244deg, var(--cyan) 244deg 245deg,
+            transparent 245deg 254deg, var(--cyan) 254deg 255deg,
+            transparent 255deg 264deg, var(--cyan) 264deg 265deg,
+            transparent 265deg 274deg, var(--cyan) 274deg 275deg,
+            transparent 275deg 284deg, var(--cyan) 284deg 285deg,
+            transparent 285deg 294deg, var(--cyan) 294deg 295deg,
+            transparent 295deg 304deg, var(--cyan) 304deg 305deg,
+            transparent 305deg 314deg, var(--cyan) 314deg 315deg,
+            transparent 315deg 324deg, var(--cyan) 324deg 325deg,
+            transparent 325deg 334deg, var(--cyan) 334deg 335deg,
+            transparent 335deg 344deg, var(--cyan) 344deg 345deg,
+            transparent 345deg 354deg, var(--cyan) 354deg 355deg,
+            transparent 355deg 360deg
+          );
+        -webkit-mask: radial-gradient(circle, transparent 49%, black 49.5%, black 50%, transparent 50.5%);
+                mask: radial-gradient(circle, transparent 49%, black 49.5%, black 50%, transparent 50.5%);
+        opacity: 0.6;
+        animation: spin 60s linear infinite;
+      }
+
+      .core {
+        position: relative;
+        width: 38%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at center,
+            #ffffff 0%,
+            #b8eaff 20%,
+            var(--cyan) 50%,
+            rgba(0, 207, 255, 0.4) 80%,
+            transparent 100%);
+        box-shadow:
+          0 0 40px var(--cyan),
+          0 0 100px rgba(0, 207, 255, 0.6),
+          0 0 200px rgba(0, 207, 255, 0.3);
+        animation: corePulse 2.4s ease-in-out infinite;
+      }
+
+      /* Voice waveform bars over reactor */
+      .waveform {
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 4px;
+        height: 40px;
+        align-items: flex-end;
+      }
+      .waveform span {
+        display: inline-block;
+        width: 4px;
+        background: var(--cyan);
+        box-shadow: 0 0 8px var(--cyan);
+        border-radius: 2px;
+        height: 4px;
+        opacity: 0.4;
+        transition: height 0.15s ease, opacity 0.15s ease;
+      }
+      .app.listening .waveform span,
+      .app.speaking  .waveform span {
+        animation: wave 0.6s ease-in-out infinite;
+        opacity: 1;
+      }
+      .waveform span:nth-child(1) { animation-delay: 0.0s; }
+      .waveform span:nth-child(2) { animation-delay: 0.1s; }
+      .waveform span:nth-child(3) { animation-delay: 0.2s; }
+      .waveform span:nth-child(4) { animation-delay: 0.3s; }
+      .waveform span:nth-child(5) { animation-delay: 0.4s; }
+      .waveform span:nth-child(6) { animation-delay: 0.3s; }
+      .waveform span:nth-child(7) { animation-delay: 0.2s; }
+      .waveform span:nth-child(8) { animation-delay: 0.1s; }
+      .waveform span:nth-child(9) { animation-delay: 0.0s; }
+
+      /* ============ TRANSCRIPT ============ */
+      .transcript {
+        position: absolute;
+        bottom: 18px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 36px);
+        max-width: 540px;
+        text-align: center;
+        z-index: 5;
+      }
+      .transcript .you,
+      .transcript .me {
+        font-family: var(--f-mono);
+        font-size: 14px;
+        line-height: 1.4;
+        margin: 4px 0;
+        min-height: 1.2em;
+        text-shadow: 0 0 8px rgba(0,0,0,0.8);
+      }
+      .transcript .you { color: var(--txt-dim); letter-spacing: 1px; }
+      .transcript .me  { color: var(--cyan); letter-spacing: 0.5px; font-size: 16px; }
+
+      /* ============ CONTROLS ============ */
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      .mic-btn {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #0a1a2e 0%, #03101e 100%);
+        border: 2px solid var(--cyan);
+        color: var(--cyan);
+        font-size: 28px;
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        box-shadow:
+          0 0 20px var(--cyan-soft),
+          inset 0 0 10px rgba(0, 207, 255, 0.2);
+        transition: transform 0.12s ease, box-shadow 0.2s ease, background 0.2s ease;
+        user-select: none;
+      }
+      .mic-btn:hover { transform: scale(1.05); }
+      .mic-btn:active { transform: scale(0.95); }
+      .app.listening .mic-btn {
+        background: linear-gradient(180deg, var(--cyan) 0%, #0099cc 100%);
+        color: #03101e;
+        box-shadow: 0 0 30px var(--cyan), 0 0 60px var(--cyan-soft);
+        animation: micPulse 0.8s ease-in-out infinite;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        max-width: 520px;
+      }
+
+      .text-input {
+        flex: 1;
+        background: rgba(0, 207, 255, 0.05);
+        border: 1px solid var(--cyan-soft);
+        color: var(--txt);
+        font-family: var(--f-mono);
+        font-size: 14px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        outline: none;
+        letter-spacing: 0.5px;
+      }
+      .text-input::placeholder { color: var(--txt-dim); }
+      .text-input:focus {
+        border-color: var(--cyan);
+        box-shadow: 0 0 12px var(--cyan-glow);
+      }
+
+      .send-btn {
+        background: var(--cyan);
+        color: var(--bg);
+        border: none;
+        font-family: var(--f-display);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        padding: 0 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        text-transform: uppercase;
+      }
+      .send-btn:hover { background: #fff; }
+
+      .voice-pick {
+        background: transparent;
+        border: 1px solid var(--cyan-soft);
+        color: var(--txt-dim);
+        font-family: var(--f-mono);
+        font-size: 11px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        outline: none;
+        max-width: 240px;
+      }
+
+      .hint {
+        font-family: var(--f-mono);
+        font-size: 10px;
+        color: var(--txt-dim);
+        letter-spacing: 1px;
+        text-align: center;
+      }
+
+      /* ============ Keyframes ============ */
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%      { opacity: 0.5; transform: scale(0.85); }
+      }
+
+      @keyframes corePulse {
+        0%, 100% {
+          box-shadow: 0 0 40px var(--cyan), 0 0 100px rgba(0, 207, 255, 0.6), 0 0 200px rgba(0, 207, 255, 0.3);
+          transform: scale(1);
+        }
+        50% {
+          box-shadow: 0 0 60px var(--cyan), 0 0 140px rgba(0, 207, 255, 0.8), 0 0 260px rgba(0, 207, 255, 0.5);
+          transform: scale(1.06);
+        }
+      }
+
+      .app.speaking .core,
+      .app.listening .core {
+        animation-duration: 0.9s !important;
+      }
+
+      @keyframes wave {
+        0%, 100% { height: 6px; }
+        50%      { height: 32px; }
+      }
+
+      @keyframes micPulse {
+        0%, 100% { box-shadow: 0 0 30px var(--cyan), 0 0 60px var(--cyan-soft); }
+        50%      { box-shadow: 0 0 50px var(--cyan), 0 0 100px var(--cyan); }
+      }
+
+      /* Mobile bumps */
+      @media (max-width: 480px) {
+        .hud-side { font-size: 9px; max-width: 32%; }
+        .top-bar .logo { font-size: 14px; letter-spacing: 4px; }
+        .mic-btn { width: 64px; height: 64px; font-size: 24px; }
+        .transcript .me { font-size: 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <!-- TOP BAR -->
+      <header class="top-bar">
+        <div class="logo">J.A.R.V.I.S.</div>
+        <div class="status">
+          <span id="status-text">SISTEMA EN LÍNEA</span>
+          <span class="status-dot" id="status-dot"></span>
+        </div>
+      </header>
+
+      <!-- MAIN STAGE -->
+      <div class="stage">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+
+        <div class="hud-side left">
+          <div class="row"><b>SYS</b><span id="hud-time">--:--:--</span></div>
+          <div class="row"><b>CPU</b><span>98.7%</span></div>
+          <div class="row"><b>MEM</b><span>04.2 GB</span></div>
+          <div class="row"><b>NET</b><span>STABLE</span></div>
+          <div class="row"><b>VOZ</b><span id="hud-voice">--</span></div>
+        </div>
+
+        <div class="hud-side right">
+          <div class="row"><span id="hud-date">--/--/----</span><b>FECHA</b></div>
+          <div class="row"><span>ES-MX</span><b>IDIOMA</b></div>
+          <div class="row"><span>17 °C</span><b>AMB</b></div>
+          <div class="row"><span>OPTIMO</span><b>EST</b></div>
+          <div class="row"><span id="hud-mode">LISTO</span><b>MODO</b></div>
+        </div>
+
+        <div class="reactor">
+          <div class="ticks"></div>
+          <div class="ring r1"></div>
+          <div class="ring r2"></div>
+          <div class="ring r3"></div>
+          <div class="ring r4"></div>
+          <div class="core"></div>
+          <div class="waveform">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+
+        <div class="transcript">
+          <p class="you" id="you-text">&nbsp;</p>
+          <p class="me"  id="me-text">Hola jefe. Toque el micrófono cuando esté listo.</p>
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="controls">
+        <select class="voice-pick" id="voice-pick" title="Voz"></select>
+
+        <button class="mic-btn" id="mic-btn" title="Hablar">🎙️</button>
+
+        <form class="input-row" id="text-form">
+          <input
+            class="text-input"
+            id="text-input"
+            type="text"
+            placeholder="O escribe aquí…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="submit" class="send-btn">Enviar</button>
+        </form>
+
+        <p class="hint">
+          Tip: prueba con "hola", "qué hora es", "quién eres", "cuéntame del ebook".
+        </p>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const app        = document.getElementById('app');
+        const statusText = document.getElementById('status-text');
+        const statusDot  = document.getElementById('status-dot');
+        const youText    = document.getElementById('you-text');
+        const meText     = document.getElementById('me-text');
+        const micBtn     = document.getElementById('mic-btn');
+        const textForm   = document.getElementById('text-form');
+        const textInput  = document.getElementById('text-input');
+        const voicePick  = document.getElementById('voice-pick');
+        const hudTime    = document.getElementById('hud-time');
+        const hudDate    = document.getElementById('hud-date');
+        const hudVoice   = document.getElementById('hud-voice');
+        const hudMode    = document.getElementById('hud-mode');
+
+        // ====== Live clock in HUD ======
+        function tickClock() {
+          const d = new Date();
+          const pad = n => String(n).padStart(2, '0');
+          hudTime.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+          hudDate.textContent = `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`;
+        }
+        tickClock();
+        setInterval(tickClock, 1000);
+
+        // ====== SpeechSynthesis: pick female Spanish voice ======
+        const synth = window.speechSynthesis;
+        let chosenVoice = null;
+
+        const preferredNames = [
+          'Paulina', 'Sabina', 'Mónica', 'Monica', 'Marisol', 'Mariana',
+          'Lupe', 'Esperanza', 'Soledad', 'Helena', 'Lucia', 'Lucía',
+          'Google español', 'es-ES-Wavenet-A', 'es-US-Wavenet-A'
+        ];
+
+        function listVoices() {
+          const voices = synth.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith('es'));
+          voicePick.innerHTML = '';
+          voices.forEach((v, i) => {
+            const opt = document.createElement('option');
+            opt.value = v.name;
+            opt.textContent = `${v.name} (${v.lang})`;
+            voicePick.appendChild(opt);
+          });
+          // pick best
+          let best = null;
+          for (const name of preferredNames) {
+            best = voices.find(v => v.name.includes(name));
+            if (best) break;
+          }
+          if (!best) {
+            best = voices.find(v => /fem|woman|mujer/i.test(v.name)) || voices[0];
+          }
+          if (best) {
+            chosenVoice = best;
+            voicePick.value = best.name;
+            hudVoice.textContent = best.name.split(' ')[0].toUpperCase();
+          }
+        }
+
+        if (synth) {
+          listVoices();
+          synth.onvoiceschanged = listVoices;
+        }
+
+        voicePick.addEventListener('change', () => {
+          const v = synth.getVoices().find(x => x.name === voicePick.value);
+          if (v) {
+            chosenVoice = v;
+            hudVoice.textContent = v.name.split(' ')[0].toUpperCase();
+          }
+        });
+
+        function speak(text) {
+          if (!synth) return;
+          synth.cancel();
+          const u = new SpeechSynthesisUtterance(text);
+          if (chosenVoice) u.voice = chosenVoice;
+          u.lang = chosenVoice ? chosenVoice.lang : 'es-MX';
+          u.rate = 1.0;
+          u.pitch = 1.1;
+          u.onstart = () => setState('speaking', 'HABLANDO…');
+          u.onend   = () => setState('idle', 'SISTEMA EN LÍNEA');
+          synth.speak(u);
+        }
+
+        // ====== SpeechRecognition (Web Speech API) ======
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        if (SR) {
+          recognition = new SR();
+          recognition.lang = 'es-MX';
+          recognition.continuous = false;
+          recognition.interimResults = true;
+
+          recognition.onstart = () => setState('listening', 'ESCUCHANDO…');
+          recognition.onresult = (ev) => {
+            let final = '';
+            let interim = '';
+            for (let i = ev.resultIndex; i < ev.results.length; i++) {
+              const t = ev.results[i][0].transcript;
+              if (ev.results[i].isFinal) final += t;
+              else interim += t;
+            }
+            youText.textContent = (final || interim).trim();
+            if (final) {
+              handleInput(final);
+            }
+          };
+          recognition.onerror = () => setState('idle', 'SISTEMA EN LÍNEA');
+          recognition.onend   = () => {
+            if (app.classList.contains('listening')) setState('idle', 'SISTEMA EN LÍNEA');
+          };
+        } else {
+          micBtn.style.opacity = 0.4;
+          micBtn.title = 'Tu navegador no soporta voz. Usa el texto.';
+        }
+
+        function setState(state, label) {
+          app.classList.remove('listening', 'thinking', 'speaking');
+          statusDot.classList.remove('listening', 'thinking', 'speaking');
+          if (state === 'listening') {
+            app.classList.add('listening');
+            statusDot.classList.add('listening');
+            hudMode.textContent = 'ESCUCHA';
+          } else if (state === 'thinking') {
+            app.classList.add('thinking');
+            statusDot.classList.add('thinking');
+            hudMode.textContent = 'PROCESA';
+          } else if (state === 'speaking') {
+            app.classList.add('speaking');
+            statusDot.classList.add('speaking');
+            hudMode.textContent = 'RESPONDE';
+          } else {
+            hudMode.textContent = 'LISTO';
+          }
+          statusText.textContent = label;
+        }
+
+        micBtn.addEventListener('click', () => {
+          if (!recognition) {
+            textInput.focus();
+            return;
+          }
+          if (app.classList.contains('listening')) {
+            recognition.stop();
+          } else {
+            try {
+              youText.textContent = '';
+              recognition.start();
+            } catch (e) {
+              // already started
+            }
+          }
+        });
+
+        textForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const v = textInput.value.trim();
+          if (!v) return;
+          youText.textContent = v;
+          textInput.value = '';
+          handleInput(v);
+        });
+
+        // ====== Brain (pattern responses) ======
+        function handleInput(text) {
+          setState('thinking', 'PROCESANDO…');
+          setTimeout(() => {
+            const reply = respond(text);
+            meText.textContent = reply;
+            speak(reply);
+          }, 350);
+        }
+
+        function respond(input) {
+          const t = input.toLowerCase().trim();
+          const d = new Date();
+
+          if (/^(hola|buenas|hey|qué tal|que tal|saludos|holi)/.test(t))
+            return 'Hola, jefe. A su servicio. ¿En qué le puedo ayudar?';
+
+          if (/(quién eres|quien eres|cómo te llamas|como te llamas|tu nombre|quien sos)/.test(t))
+            return 'Soy Jarvis, su asistente personal. Programada para ayudarle en todo momento, jefe.';
+
+          if (/(qué hora|que hora|hora es|hora actual)/.test(t)) {
+            const h = d.getHours();
+            const m = d.getMinutes();
+            return `Son las ${h} con ${m} minutos.`;
+          }
+
+          if (/(qué día|que día|que dia|qué fecha|que fecha|fecha de hoy|qué fecha es)/.test(t)) {
+            return `Hoy es ${d.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+          }
+
+          if (/(gracias|muchas gracias|te lo agradezco)/.test(t))
+            return 'A su servicio, jefe. Para eso estoy.';
+
+          if (/(adiós|adios|hasta luego|bye|chao|hasta pronto)/.test(t))
+            return 'Hasta pronto, jefe. Aquí estaré cuando me necesite.';
+
+          if (/(cómo estás|como estas|qué tal estás|cómo te encuentras)/.test(t))
+            return 'Todos mis sistemas funcionan al cien por ciento. Lista para lo que necesite.';
+
+          if (/(ebook|estrategias que venden|landing|página de venta)/.test(t))
+            return 'Su ebook Estrategias Que Venden está activo y enseña a vender con redes sociales sin invertir un peso en anuncios. Cuesta ciento cincuenta pesos mexicanos. ¿Desea que abra la página?';
+
+          if (/(asesoría|consultoría|consultoria|asesoria|uno a uno)/.test(t))
+            return 'Su asesoría uno a uno está disponible por diez mil pesos. Solo cuatro plazas por mes. ¿Le agendo a un cliente?';
+
+          if (/(cuéntame|cuentame|sobre ti|que sabes hacer|qué sabes hacer|qué puedes|que puedes)/.test(t))
+            return 'Puedo conversar con usted, decirle la hora y la fecha, recordarle sus productos y, pronto, conectarme con sus redes y agendar reuniones. ¿En qué empezamos?';
+
+          if (/(broma|chiste)/.test(t))
+            return '¿Por qué los emprendedores no juegan al escondite? Porque el éxito siempre los encuentra.';
+
+          if (/(motívame|motivame|motivación|motivacion|inspírame|inspirame)/.test(t))
+            return 'Jefe, a los diecisiete años ya facturó más de cien mil dólares desde un pueblo. El siguiente nivel es solo cuestión de seguir construyendo. Hoy también.';
+
+          if (/(modo iron man|protocolo|activa el modo|activar el modo)/.test(t))
+            return 'Protocolo activado. Sistemas a máxima potencia. A sus órdenes.';
+
+          return 'Recibido, jefe. Por ahora puedo conversar y darle datos básicos. Conécteme a una IA y podré responderle cualquier cosa.';
+        }
+
+        // First greeting after voices load (small delay so voice is ready)
+        setTimeout(() => {
+          if (chosenVoice) speak('Sistema en línea. Buenas, jefe.');
+        }, 1200);
+      })();
+    </script>
+  </body>
+</html>
